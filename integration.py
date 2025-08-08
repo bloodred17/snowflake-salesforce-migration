@@ -71,10 +71,12 @@ class SalesforceSnowflakeIntegration:
             sales_order_date = order_data.get('SALES_ORDER_DATE', None)
             customer_po_number = order_data.get('CUSTOMER_PO_NUMBER', '')
 
-            existing_order_id = self.salesforce_client.check_existing_sales_order_by_invoice(invoice_number)
+            existing_order_id = self.salesforce_client.check_existing_sales_order_by_invoice(invoice_number, order_number)
 
             if not existing_order_id:
                 # Create new order
+                order_type = "posted" if posting_date else "open"
+                logger.info(f"Creating new {order_type} order {order_number} (Invoice: {invoice_number or 'None'})")
                 so_data = {
                     'Name': f"{customer_name} - {order_number}",
                     'Sales_Order_Number__c': order_number,
@@ -96,6 +98,8 @@ class SalesforceSnowflakeIntegration:
             else:
                 # Update existing order with current information
                 sales_order_id = existing_order_id
+                order_type = "posted" if posting_date else "open"
+                logger.info(f"Updating existing {order_type} order {order_number} (Invoice: {invoice_number or 'None'})")
                 update_data = {
                     'Posting_Date__c': posting_date,
                     'Order_Status__c': "Closed" if posting_date else "Open",
@@ -196,8 +200,8 @@ class SalesforceSnowflakeIntegration:
                     time.sleep(60)
         except KeyboardInterrupt:
             logger.info("Integration service stopped by user.")
-        finally:
-            self.cleanup()
+        # finally:
+        #     self.cleanup()
 
     def cleanup(self):
         self.snowflake_client.close()

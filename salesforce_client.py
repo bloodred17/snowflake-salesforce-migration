@@ -99,11 +99,31 @@ class SalesforceClient:
            (requests.exceptions.ConnectionError,
             requests.exceptions.RequestException,
             requests.exceptions.HTTPError))
-    def check_existing_sales_order_by_invoice(self, invoice_number):
+    def check_existing_sales_order_by_invoice(self, invoice_number, order_number=None):
         if not invoice_number:
+            # For open orders without invoice numbers, check by Sales_Order_Number__c
+            if order_number:
+                so_query = f"SELECT Id FROM Sales_Order__c WHERE Sales_Order_Number__c = '{order_number}' LIMIT 1"
+                logger.info(f"Checking for existing Sales Order with Sales_Order_Number__c = '{order_number}' (open order)")
+                result = self.sf.query_all(so_query)['records']
+                return result[0]['Id'] if result else None
             return None
+        
         so_query = f"SELECT Id FROM Sales_Order__c WHERE Invoice_Number__c = '{invoice_number}' LIMIT 1"
         logger.info(f"Checking for existing Sales Order with Invoice_Number__c = '{invoice_number}'")
+        result = self.sf.query_all(so_query)['records']
+        return result[0]['Id'] if result else None
+
+    @retry(APP_CONFIG['max_retries'], APP_CONFIG['retry_wait'],
+           (requests.exceptions.ConnectionError,
+            requests.exceptions.RequestException,
+            requests.exceptions.HTTPError))
+    def check_existing_sales_order_by_number(self, order_number):
+        """Check for existing sales order by Sales_Order_Number__c field"""
+        if not order_number:
+            return None
+        so_query = f"SELECT Id FROM Sales_Order__c WHERE Sales_Order_Number__c = '{order_number}' LIMIT 1"
+        logger.info(f"Checking for existing Sales Order with Sales_Order_Number__c = '{order_number}'")
         result = self.sf.query_all(so_query)['records']
         return result[0]['Id'] if result else None
 
