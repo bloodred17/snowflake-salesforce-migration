@@ -179,7 +179,8 @@ class SalesforceSnowflakeIntegration:
             logger.info(
                 f"Processing cycle completed in {elapsed_time:.2f} seconds. "
                 f"Created {total_orders} new orders, updated {total_orders_updated} existing orders, "
-                f"created {total_items} new items, and updated {total_items_updated} existing items."
+                f"created {total_items} new items, and updated {total_items_updated} existing items. "
+                f"Filter: Sales Order Date OR Posting Date in last 7 days."
             )
             return total_orders, total_items, total_orders_updated, total_items_updated
         except Exception as e:
@@ -188,7 +189,7 @@ class SalesforceSnowflakeIntegration:
 
     def run(self):
         try:
-            logger.info("Starting Salesforce-Snowflake integration service (UPDATE MODE - Last 7 Days)")
+            logger.info("Starting Salesforce-Snowflake integration service (CREATE/UPDATE MODE - Sales Order Date OR Posting Date in Last 7 Days)")
             while True:
                 try:
                     self.run_integration_cycle()

@@ -79,10 +79,10 @@ class SnowflakeClient:
             DEDUCTION,
             INVOICE_DETAIL_COMMENT
         FROM SALESFORCE_INTEGRATION.VW_SALES_ORDER_INVOICING_SUMMARY
-        WHERE SALES_ORDER_DATE >= '{seven_days_ago}'
-        AND SALES_ORDER_DATE IS NOT NULL
+        WHERE (SALES_ORDER_DATE >= '{seven_days_ago}' AND SALES_ORDER_DATE IS NOT NULL)
+           OR (POSTING_DATE >= '{seven_days_ago}' AND POSTING_DATE IS NOT NULL)
         """
-        logger.info(f"Using filter for orders with sales order date of {seven_days_ago} or later (last 7 days).")
+        logger.info(f"Using filter for orders with Sales Order Date OR Posting Date in the past 7 days (since {seven_days_ago}).")
 
         cursor = self.conn.cursor()
         cursor.execute(query)
